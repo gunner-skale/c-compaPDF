@@ -1,0 +1,113 @@
+{% extends "base.html" %} {% block title %}Inicio - Analizador de Pólizas{%
+endblock %} {% block content %}
+<div class="hero">
+    <h2>Bienvenido al Analizador Comparativo de Pólizas</h2>
+    <p class="lead">
+        Sube dos pólizas de seguros en formato PDF y un archivo Excel con
+        preguntas para comparar respuestas automáticamente. Nuestro sistema
+        utiliza inteligencia artificial para analizar y extraer información
+        relevante de tus documentos.
+    </p>
+</div>
+<!--
+<div class="description">
+    <h3>✨ Características</h3>
+    <ul>
+        <li><strong>Comparación Dual:</strong> Analiza dos pólizas simultáneamente y compara sus respuestas</li>
+        <li><strong>OCR Inteligente:</strong> Detecta automáticamente PDFs escaneados y aplica OCR optimizado</li>
+        <li><strong>IA Avanzada:</strong> Utiliza Mistral AI para encontrar información relevante en tus documentos</li>
+        <li><strong>Resultados en Excel:</strong> Descarga un archivo Excel con todas las respuestas organizadas</li>
+        <li><strong>Rápido y Preciso:</strong> Procesamiento optimizado para máxima velocidad sin perder calidad</li>
+    </ul>
+</div>
+-->
+<div class="upload-section">
+    <h3>📤 Subir Archivos</h3>
+    <form
+        method="POST"
+        action="{{ url_for('procesar') }}"
+        enctype="multipart/form-data"
+        class="upload-form"
+    >
+        <div class="form-row">
+            <div class="form-group">
+                <label for="pdf1">📄 Póliza 1 (PDF)</label>
+                <input
+                    type="file"
+                    id="pdf1"
+                    name="pdf1"
+                    accept=".pdf"
+                    required
+                />
+                <small class="form-text">Primera póliza a comparar</small>
+            </div>
+
+            <div class="form-group">
+                <label for="pdf2">📄 Póliza 2 (PDF)</label>
+                <input
+                    type="file"
+                    id="pdf2"
+                    name="pdf2"
+                    accept=".pdf"
+                    required
+                />
+                <small class="form-text">Segunda póliza a comparar</small>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="pdf3">🖼️ PDF Escaneado (OCR) - Opcional</label>
+                <input type="file" id="pdf3" name="pdf3" accept=".pdf" />
+                <small class="form-text"
+                    >Sube un PDF escaneado (imagen) para análisis
+                    adicional</small
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="excel">📊 Archivo Excel con Preguntas</label>
+                <input
+                    type="file"
+                    id="excel"
+                    name="excel"
+                    accept=".xlsx"
+                    required
+                />
+                <small class="form-text"
+                    >Excel con las preguntas a responder</small
+                >
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span class="btn-icon">🚀</span>
+                Iniciar Procesamiento Comparativo
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="instructions">
+    <h3>📋 Instrucciones</h3>
+    <ol>
+        <li>
+            Sube dos archivos PDF con las pólizas de seguros que deseas comparar
+        </li>
+        <li>
+            Opcionalmente, sube un PDF escaneado (imagen) para análisis con OCR
+        </li>
+        <li>
+            Sube un archivo Excel con las preguntas que quieres que el sistema
+            responda
+        </li>
+        <li>Haz clic en "Iniciar Procesamiento Comparativo"</li>
+        <li>
+            Espera mientras el sistema procesa tus documentos (puede tomar
+            varios minutos)
+        </li>
+        <li>Descarga el archivo Excel con los resultados comparativos</li>
+    </ol>
+</div>
+{% endblock %}

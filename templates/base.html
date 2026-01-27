@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% block title %}Analizador de Pólizas{% endblock %}</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}"
+        />
+    </head>
+    <body>
+        <header>
+            <div class="container">
+                <div class="logo-container">
+                    <img
+                        src="{{ url_for('static', filename='img/logo.png') }}"
+                        alt="Logo"
+                        class="logo"
+                    />
+                    <h1>Analizador Comparativo de Pólizas + OCR</h1>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            if messages %} {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %} {% endif %} {% endwith %} {% block content %}{%
+            endblock %}
+        </main>
+
+        <footer>
+            <div class="container">
+                <p>
+                    &copy; 2026 Analizador de Pólizas de Seguros. Todos los
+                    derechos reservados.
+                </p>
+            </div>
+        </footer>
+    </body>
+</html>

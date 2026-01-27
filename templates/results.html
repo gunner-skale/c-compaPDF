@@ -1,0 +1,200 @@
+{% extends "base.html" %} {% block title %}Resultados - Analizador de Pólizas{%
+endblock %} {% block content %}
+<div class="results-header">
+    <h2>✅ Procesamiento Completado</h2>
+    <p class="lead">
+        El análisis de tus documentos ha finalizado correctamente.
+    </p>
+</div>
+
+<div class="summary-cards">
+    <div class="card">
+        <div class="card-icon">⏱️</div>
+        <div class="card-content">
+            <h3>Tiempo Total</h3>
+            <p class="card-value">{{ "%.2f"|format(tiempo_min) }} minutos</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-icon">📈</div>
+        <div class="card-content">
+            <h3>Velocidad</h3>
+            <p class="card-value">{{ "%.1f"|format(velocidad) }} filas/min</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-icon">📋</div>
+        <div class="card-content">
+            <h3>Filas Procesadas</h3>
+            <p class="card-value">{{ total_filas }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="stats-section">
+    <h3>📊 Resumen Comparativo</h3>
+
+    <div class="stats-grid">
+        <div class="stat-box">
+            <h4>📄 {{ pdf1_name[:20] }}...</h4>
+            <div class="stat-metric">
+                <span class="stat-label">Encontradas:</span>
+                <span class="stat-value success"
+                    >{{ contadores_pdf1.encontrado }}</span
+                >
+                <span class="stat-total">/{{ total_filas }}</span>
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">Éxito:</span>
+                <span class="stat-value success"
+                    >{{
+                    "%.1f"|format((contadores_pdf1.encontrado/total_filas)*100)
+                    }}%</span
+                >
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">No encontradas:</span>
+                <span class="stat-value warning"
+                    >{{ contadores_pdf1.no_encontrado }}</span
+                >
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">Errores:</span>
+                <span class="stat-value error"
+                    >{{ contadores_pdf1.error }}</span
+                >
+            </div>
+        </div>
+
+        <div class="stat-box">
+            <h4>📄 {{ pdf2_name[:20] }}...</h4>
+            <div class="stat-metric">
+                <span class="stat-label">Encontradas:</span>
+                <span class="stat-value success"
+                    >{{ contadores_pdf2.encontrado }}</span
+                >
+                <span class="stat-total">/{{ total_filas }}</span>
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">Éxito:</span>
+                <span class="stat-value success"
+                    >{{
+                    "%.1f"|format((contadores_pdf2.encontrado/total_filas)*100)
+                    }}%</span
+                >
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">No encontradas:</span>
+                <span class="stat-value warning"
+                    >{{ contadores_pdf2.no_encontrado }}</span
+                >
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">Errores:</span>
+                <span class="stat-value error"
+                    >{{ contadores_pdf2.error }}</span
+                >
+            </div>
+        </div>
+
+        {% if pdf3_name %}
+        <div class="stat-box">
+            <h4>🖼️ {{ pdf3_name[:20] }}...</h4>
+            <div class="stat-metric">
+                <span class="stat-label">Encontradas:</span>
+                <span class="stat-value success"
+                    >{{ contadores_ocr.encontrado }}</span
+                >
+                <span class="stat-total">/{{ total_filas }}</span>
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">Éxito:</span>
+                <span class="stat-value success"
+                    >{{
+                    "%.1f"|format((contadores_ocr.encontrado/total_filas)*100)
+                    }}%</span
+                >
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">No encontradas:</span>
+                <span class="stat-value warning"
+                    >{{ contadores_ocr.no_encontrado }}</span
+                >
+            </div>
+            <div class="stat-metric">
+                <span class="stat-label">Errores:</span>
+                <span class="stat-value error">{{ contadores_ocr.error }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="results-table">
+    <h3>📋 Resultados Detallados (Primeras 10 Filas)</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fila</th>
+                    <th>Consulta</th>
+                    <th>{{ pdf1_name[:15] }}...</th>
+                    <th>{{ pdf2_name[:15] }}...</th>
+                    {% if pdf3_name %}
+                    <th>OCR</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in resultados %}
+                <tr>
+                    <td>{{ r.fila }}</td>
+                    <td>
+                        {{ r.consulta[:80] + "..." if r.consulta|length > 80
+                        else r.consulta }}
+                    </td>
+                    <td>
+                        {{ r.respuesta_pdf1[:80] + "..." if
+                        r.respuesta_pdf1|length > 80 else r.respuesta_pdf1 }}
+                    </td>
+                    <td>
+                        {{ r.respuesta_pdf2[:80] + "..." if
+                        r.respuesta_pdf2|length > 80 else r.respuesta_pdf2 }}
+                    </td>
+                    {% if pdf3_name %}
+                    <td>
+                        {{ r.respuesta_ocr[:80] + "..." if r.respuesta_ocr and
+                        r.respuesta_ocr|length > 80 else r.respuesta_ocr if
+                        r.respuesta_ocr else "-" }}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="download-section">
+    <h3>💾 Descargar Resultados</h3>
+    <a
+        href="{{ url_for('descargar', filename=output_filename) }}"
+        class="btn btn-download"
+    >
+        <span class="btn-icon">📥</span>
+        Descargar Excel con Resultados
+    </a>
+    <p class="download-info">
+        El archivo contiene todas las respuestas organizadas en columnas
+        separadas para cada documento analizado.
+    </p>
+</div>
+
+<div class="back-button">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+        ← Volver al Inicio
+    </a>
+</div>
+{% endblock %}

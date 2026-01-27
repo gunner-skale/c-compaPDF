@@ -132,6 +132,21 @@ endblock %} {% block content %}
     </div>
 </div>
 
+<div class="download-section">
+    <h3>💾 Descargar Resultados</h3>
+    <a
+        href="{{ url_for('descargar', filename=output_filename) }}"
+        class="btn btn-download"
+    >
+        <span class="btn-icon">📥</span>
+        Descargar Excel con Resultados
+    </a>
+    <p class="download-info">
+        El archivo contiene todas las respuestas organizadas en columnas
+        separadas para cada documento analizado.
+    </p>
+</div>
+
 <div class="results-table">
     <h3>📋 Resultados Detallados (Primeras 10 Filas)</h3>
     <div class="table-container">
@@ -175,21 +190,6 @@ endblock %} {% block content %}
             </tbody>
         </table>
     </div>
-</div>
-
-<div class="download-section">
-    <h3>💾 Descargar Resultados</h3>
-    <a
-        href="{{ url_for('descargar', filename=output_filename) }}"
-        class="btn btn-download"
-    >
-        <span class="btn-icon">📥</span>
-        Descargar Excel con Resultados
-    </a>
-    <p class="download-info">
-        El archivo contiene todas las respuestas organizadas en columnas
-        separadas para cada documento analizado.
-    </p>
 </div>
 
 <div class="back-button">

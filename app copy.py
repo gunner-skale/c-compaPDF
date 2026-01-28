@@ -36,7 +36,8 @@ app.config['TASKS'] = {}  # {task_id: {status, progress, message, result, error}
 # CONFIGURACIÓN OPTIMIZADA PARA VELOCIDAD
 # =========================
 EMBED_MODEL = "mistral-embed"
-LLM_MODEL = "mistral-small-latest"  # ✅ CORREGIDO: open-mixtral-8x7b no existe (causaba todos los errores)
+#LLM_MODEL = "mistral-small-latest"
+LLM_MODEL = "open-mixtral-8x7b"
 
 # Configuración de columnas Excel
 FILA_INICIO = 17
@@ -49,11 +50,11 @@ COL_F = 6
 
 # ⚡ PARÁMETROS OPTIMIZADOS PARA VELOCIDAD
 PAUSA_ENTRE_CONSULTAS = 0.2
-MAX_REINTENTOS = 2
-CHUNK_SIZE = 1500
-OVERLAP =200
+MAX_REINTENTOS = 3
+CHUNK_SIZE = 1200
+OVERLAP =300
 TOP_K = 8
-UMBRAL_SIMILITUD = 0.35 #0.15
+UMBRAL_SIMILITUD = 0.15 #0.15
 BATCH_SIZE_EMBEDDINGS = 12
 
 # Caches para embeddings
@@ -163,39 +164,6 @@ def escribir_en_celda(ws, row, col, valor):
         if celda.coordinate in r:
             ws.cell(r.min_row, r.min_col).value = valor
             return
-
-# ✅ NUEVA FUNCIÓN: DUPLICAR HOJA EXACTAMENTE (incluyendo estilos, fusiones y formato)
-def duplicar_hoja(wb, hoja_origen, nombre_nuevo):
-    """Crea una copia EXACTA de una hoja (incluyendo estilos, fusiones y formato)"""
-    hoja_nueva = wb.create_sheet(title=nombre_nuevo)
-
-    # Copiar todas las celdas con sus valores y estilos
-    for row in hoja_origen.iter_rows(min_row=1, max_row=hoja_origen.max_row, min_col=1, max_col=hoja_origen.max_column):
-        for cell in row:
-            nueva_celda = hoja_nueva.cell(row=cell.row, column=cell.column, value=cell.value)
-            if cell.has_style:
-                nueva_celda.font = cell.font.copy()
-                nueva_celda.border = cell.border.copy()
-                nueva_celda.fill = cell.fill.copy()
-                nueva_celda.number_format = cell.number_format
-                nueva_celda.protection = cell.protection.copy()
-                nueva_celda.alignment = cell.alignment.copy()
-
-    # Copiar celdas fusionadas
-    for rango in hoja_origen.merged_cells.ranges:
-        hoja_nueva.merge_cells(str(rango))
-
-    # Copiar dimensiones de columnas
-    for col_letter in hoja_origen.column_dimensions:
-        if col_letter in hoja_origen.column_dimensions:
-            hoja_nueva.column_dimensions[col_letter] = hoja_origen.column_dimensions[col_letter]
-
-    # Copiar dimensiones de filas
-    for row_number in hoja_origen.row_dimensions:
-        if row_number in hoja_origen.row_dimensions:
-            hoja_nueva.row_dimensions[row_number] = hoja_origen.row_dimensions[row_number]
-
-    return hoja_nueva
 
 # =========================
 # FUNCIONES PARA PDF (RAG) - OPTIMIZADAS
@@ -518,7 +486,7 @@ def procesar_consulta_dual(fila, consulta, chunks1, embeddings1, chunks2, embedd
     return resultado
 
 # =========================
-# PROCESAMIENTO EN BACKGROUND (MODIFICADO PARA DUPLICAR HOJA)
+# PROCESAMIENTO EN BACKGROUND
 # =========================
 def procesar_documentos_task(task_id, pdf1_path, pdf2_path, excel_path, pdf3_path=None):
     """Procesamiento en background con actualización de progreso"""
@@ -528,12 +496,10 @@ def procesar_documentos_task(task_id, pdf1_path, pdf2_path, excel_path, pdf3_pat
         update_task(task_id, progress=3, message="✅ Conexión con Mistral AI establecida")
         time.sleep(0.5)
 
-        # Cargar Excel + ✅ DUPLICAR HOJA INMEDIATAMENTE
+        # Cargar Excel
         update_task(task_id, status="cargando_excel", progress=5, message="Leyendo archivo Excel...")
         wb = load_workbook(excel_path)
         ws = wb.active
-        # ✅ CREAR COPIA EXACTA DE LA HOJA ORIGINAL AL INICIO
-        ws_cumple = duplicar_hoja(wb, ws, f"{ws.title}_Cumple")
         vector = construir_vector(ws)
         total_filas = len(vector)
 
@@ -583,50 +549,21 @@ def procesar_documentos_task(task_id, pdf1_path, pdf2_path, excel_path, pdf3_pat
 
         tiempo_proc = time.time() - inicio_proc
 
-        # Guardar resultados en AMBAS HOJAS
+        # Guardar resultados
         update_task(task_id, status="guardando_resultados", progress=97, message="💾 Guardando resultados en Excel...")
 
-        # Hoja original: respuestas detalladas
         ws.cell(row=FILA_INICIO-1, column=COL_F, value="DOCUMENTO")
         ws.cell(row=FILA_INICIO-1, column=COL_G, value=os.path.basename(pdf1_path).replace(".pdf", ""))
         ws.cell(row=FILA_INICIO-1, column=COL_H, value=os.path.basename(pdf2_path).replace(".pdf", ""))
+
         if usar_ocr:
             ws.cell(row=FILA_INICIO-1, column=COL_I, value="OCR: " + os.path.basename(pdf3_path).replace(".pdf", ""))
 
-        # Hoja duplicada: encabezados "Cumple/No Cumple"
-        ws_cumple.cell(row=FILA_INICIO-1, column=COL_F, value="DOCUMENTO")
-        ws_cumple.cell(row=FILA_INICIO-1, column=COL_G, value=f"Cumple: {os.path.basename(pdf1_path).replace('.pdf', '')}")
-        ws_cumple.cell(row=FILA_INICIO-1, column=COL_H, value=f"Cumple: {os.path.basename(pdf2_path).replace('.pdf', '')}")
-        if usar_ocr:
-            ws_cumple.cell(row=FILA_INICIO-1, column=COL_I, value=f"Cumple: OCR {os.path.basename(pdf3_path).replace('.pdf', '')}")
-
-        # Llenar ambas hojas
         for r in resultados:
-            # Hoja original: respuestas detalladas
             escribir_en_celda(ws, r['fila'], COL_G, r['respuesta_pdf1'])
             escribir_en_celda(ws, r['fila'], COL_H, r['respuesta_pdf2'])
             if usar_ocr and r.get('respuesta_ocr'):
                 escribir_en_celda(ws, r['fila'], COL_I, r['respuesta_ocr'])
-
-            # Hoja duplicada: Cumple/No Cumple
-            # PDF 1
-            if "no encontrado" in str(r['respuesta_pdf1']).lower() or "error" in str(r['respuesta_pdf1']).lower():
-                escribir_en_celda(ws_cumple, r['fila'], COL_G, "No Cumple")
-            else:
-                escribir_en_celda(ws_cumple, r['fila'], COL_G, "Cumple")
-
-            # PDF 2
-            if "no encontrado" in str(r['respuesta_pdf2']).lower() or "error" in str(r['respuesta_pdf2']).lower():
-                escribir_en_celda(ws_cumple, r['fila'], COL_H, "No Cumple")
-            else:
-                escribir_en_celda(ws_cumple, r['fila'], COL_H, "Cumple")
-
-            # OCR
-            if usar_ocr and r.get('respuesta_ocr'):
-                if "no encontrado" in str(r['respuesta_ocr']).lower() or "error" in str(r['respuesta_ocr']).lower():
-                    escribir_en_celda(ws_cumple, r['fila'], COL_I, "No Cumple")
-                else:
-                    escribir_en_celda(ws_cumple, r['fila'], COL_I, "Cumple")
 
         # Guardar archivo
         output_filename = f"resultados_{task_id}.xlsx"

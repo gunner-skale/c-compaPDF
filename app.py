@@ -50,10 +50,10 @@ COL_F = 6
 # ⚡ PARÁMETROS OPTIMIZADOS PARA VELOCIDAD
 PAUSA_ENTRE_CONSULTAS = 0.2
 MAX_REINTENTOS = 2
-CHUNK_SIZE = 1500
+CHUNK_SIZE = 2000
 OVERLAP =200
-TOP_K = 8
-UMBRAL_SIMILITUD = 0.35 #0.15
+TOP_K = 5
+UMBRAL_SIMILITUD = 0.25 #0.15
 BATCH_SIZE_EMBEDDINGS = 12
 
 # Caches para embeddings
@@ -278,7 +278,7 @@ def detectar_tipo_consulta(pregunta):
     tipos_detectados = []
 
     for termino, sinonimos in TERMINOS_SEGUROS.items():
-        if any(s in pregunta_lower for s in [termino] + sinonimos[:4]):
+        if any(s in pregunta_lower for s in [termino] + sinonimos[:2]):
             tipos_detectados.append(termino)
 
     if "modalidad" in tipos_detectados:
@@ -340,8 +340,8 @@ RESPUESTA DIRECTA DEL DOCUMENTO (INCLUYE NÚMEROS COMPLETOS):
             response = client.chat.complete(
                 model=LLM_MODEL,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.2,
-                max_tokens=200
+                temperature=0.15,
+                max_tokens=150
             )
             respuesta = response.choices[0].message.content.strip()
             return clean_response_completo(respuesta)
@@ -480,7 +480,7 @@ def procesar_consulta_dual(fila, consulta, chunks1, embeddings1, chunks2, embedd
     try:
         contexto_chunks1 = buscar_contexto(consulta, chunks1, embeddings1, embeddings_cache_pdf1, client, top_k=TOP_K, umbral=UMBRAL_SIMILITUD)
         if contexto_chunks1:
-            contexto_texto1 = "\n\n".join(contexto_chunks1[:4])
+            contexto_texto1 = "\n\n".join(contexto_chunks1[:3])
             respuesta1 = preguntar_llm_optimizada(consulta, contexto_texto1, client)
         else:
             respuesta1 = "no encontrado"
@@ -580,6 +580,7 @@ def procesar_documentos_task(task_id, pdf1_path, pdf2_path, excel_path, pdf3_pat
 
             if i < total_filas:
                 time.sleep(PAUSA_ENTRE_CONSULTAS)
+            time.sleep(0.15)
 
         tiempo_proc = time.time() - inicio_proc
 
